@@ -1,9 +1,13 @@
 'use strict';
 
 const services = require('./services');
+const controllers = require('./controllers');
+const routes = require('./routes');
 
 module.exports = {
   services,
+  controllers,
+  routes,
   
   register({ strapi }) {
     // Initialize the embedding service

@@ -109,6 +109,55 @@ module.exports = ({ strapi }) => ({
       strapi.log.error(`Failed to search similar documents for ${contentType}:`, error.message);
       throw error;
     }
+  },
+
+  async getEmbeddingStats(contentType = null) {
+    try {
+      const stats = {};
+
+      if (contentType) {
+        // Stats for specific content type
+        const total = await strapi.documents(contentType).count();
+        const withEmbeddings = await strapi.documents(contentType).count({
+          filters: { embedding: { $notNull: true } }
+        });
+
+        stats[contentType] = {
+          total,
+          withEmbeddings,
+          coverage: total > 0 ? (withEmbeddings / total * 100).toFixed(2) + '%' : '0%'
+        };
+
+      } else {
+        // Stats for all content types
+        const contentTypes = Object.keys(strapi.contentTypes)
+          .filter(type => !type.startsWith('admin::') && !type.startsWith('plugin::'));
+
+        for (const type of contentTypes) {
+          try {
+            const total = await strapi.documents(type).count();
+            const withEmbeddings = await strapi.documents(type).count({
+              filters: { embedding: { $notNull: true } }
+            });
+
+            stats[type] = {
+              total,
+              withEmbeddings,
+              coverage: total > 0 ? (withEmbeddings / total * 100).toFixed(2) + '%' : '0%'
+            };
+          } catch (error) {
+            // Skip content types that can't be queried
+            strapi.log.debug(`Skipping stats for ${type}:`, error.message);
+          }
+        }
+      }
+
+      return stats;
+
+    } catch (error) {
+      strapi.log.error('Failed to get embedding stats:', error.message);
+      throw error;
+    }
   }
 
 });
