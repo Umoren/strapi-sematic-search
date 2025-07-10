@@ -1,0 +1,29 @@
+# Development files
+*.md
+!README.md
+node_modules/
+.DS_Store
+.env
+*.log
+coverage/
+.nyc_output/
+
+# Test files
+test/
+tests/
+*.test.js
+*.spec.js
+
+# Build files
+dist/
+build/
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+Thumbs.db
+.DS_Store

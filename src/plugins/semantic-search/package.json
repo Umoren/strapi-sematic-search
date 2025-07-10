@@ -1,11 +1,41 @@
 {
-  "name": "semantic-search",
+  "name": "strapi-plugin-semantic-search",
   "version": "1.0.0",
-  "description": "Semantic search plugin for Strapi",
+  "description": "Intelligent semantic search plugin for Strapi 5 powered by OpenAI embeddings. Automatically generates embeddings for your content and provides powerful semantic search capabilities.",
   "main": "strapi-server.js",
-  "keywords": ["strapi", "plugin", "semantic", "search", "embedding", "openai"],
-  "author": "",
+  "keywords": [
+    "strapi",
+    "plugin",
+    "semantic-search",
+    "search",
+    "embedding",
+    "openai",
+    "ai",
+    "vector-search",
+    "similarity",
+    "content-discovery",
+    "strapi5"
+  ],
+  "author": {
+    "name": "Samuel Umoren",
+    "email": "samuelumoren365@gmail.com"
+  },
   "license": "MIT",
+  "homepage": "https://github.com/Umoren/strapi-plugin-semantic-search#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Umoren/strapi-plugin-semantic-search.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Umoren/strapi-plugin-semantic-search/issues"
+  },
+  "engines": {
+    "node": ">=18.0.0 <=22.x.x",
+    "npm": ">=6.0.0"
+  },
+  "peerDependencies": {
+    "@strapi/strapi": "^5.0.0"
+  },
   "strapi": {
     "displayName": "Semantic Search",
     "name": "semantic-search",
@@ -15,5 +45,11 @@
   "dependencies": {
     "axios": "^1.10.0",
     "openai": "^5.8.2"
-  }
+  },
+  "files": [
+    "strapi-server.js",
+    "server/",
+    "README.md",
+    "package.json"
+  ]
 }

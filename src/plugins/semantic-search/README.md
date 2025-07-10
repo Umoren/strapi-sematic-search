@@ -442,7 +442,7 @@ curl http://localhost:1337/api/semantic-search/stats
 
 ## License
 
-MIT License - See main project LICENSE file for details.
+MIT License
 
 ## Contributing
 
