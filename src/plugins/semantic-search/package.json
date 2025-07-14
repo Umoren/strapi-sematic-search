@@ -1,6 +1,6 @@
 {
   "name": "strapi-plugin-semantic-search",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Intelligent semantic search plugin for Strapi 5 powered by OpenAI embeddings. Automatically generates embeddings for your content and provides powerful semantic search capabilities.",
   "main": "strapi-server.js",
   "keywords": [

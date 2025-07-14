@@ -4,6 +4,13 @@
 
 Transform your Strapi CMS into an AI-powered content platform with automatic embedding generation and semantic search capabilities.
 
+## 🆕 What's New in v1.1.0
+
+- **Configurable Field Mapping** - Customize which fields to process per content type
+- **Enhanced Validation** - Comprehensive configuration validation with helpful error messages
+- **Improved Logging** - Better visibility into plugin configuration and processing
+- **Flexible Content Types** - Support for any content type with custom field mappings
+
 ## Features
 
 - **Automatic Embedding Generation** - Content embeddings created automatically on save
@@ -63,18 +70,71 @@ Add embedding fields to your content types:
 npm run develop
 ```
 
+## Configuration
+
+### Basic Configuration
+
+By default, the plugin processes these content types and fields:
+
+```javascript
+// Default configuration
+{
+  'api::article.article': ['title', 'content', 'summary'],
+  'api::blog.blog': ['title', 'body', 'excerpt']
+}
+```
+
+### Custom Configuration
+
+Configure which content types and fields to process by updating `config/plugins.js`:
+
+```javascript
+// config/plugins.js
+module.exports = ({ env }) => ({
+  'semantic-search': {
+    enabled: true,
+    resolve: './src/plugins/semantic-search',
+    config: {
+      contentTypes: {
+        'api::article.article': ['title', 'content', 'summary', 'tags'],
+        'api::blog.blog': ['title', 'body', 'excerpt', 'category'],
+        'api::product.product': ['name', 'description', 'features', 'benefits'],
+        'api::course.course': ['title', 'overview', 'learningOutcomes']
+      }
+    }
+  }
+});
+```
+
+### Configuration Options
+
+| Option | Type | Description |
+|--------|------|-------------|
+| `contentTypes` | Object | Maps content type UIDs to arrays of field names |
+
+**Content Type Format**: Use Strapi's UID format: `api::collection-name.collection-name`
+
+**Field Names**: 
+- Must be valid field names from your content type schema
+- Can include any text-based fields (text, textarea, richtext, etc.)
+- Rich text fields are automatically converted to plain text for embedding
+
+### Configuration Validation
+
+The plugin validates your configuration on startup:
+
+- ✅ **Valid content type format**: `api::article.article`
+- ✅ **Valid field arrays**: `['title', 'content']`
+- ✅ **Non-empty field names**: No empty strings or invalid types
+- ❌ **Invalid formats**: Missing `api::` prefix, empty fields, etc.
+
+Invalid configurations will log warnings and fallback to defaults.
+
 ## Usage
 
 ### Automatic Embedding Generation
 
-Embeddings are generated automatically when you create or update content. The plugin extracts text from these fields:
-- `title`
-- `name` 
-- `content`
-- `body`
-- `summary`
-- `description`
-- `excerpt`
+Embeddings are generated automatically when you create or update content. The plugin extracts text from the fields you've configured for each content type (see Configuration section above).
 
 ### Search API
 

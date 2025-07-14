@@ -24,10 +24,22 @@ module.exports = {
 };
 
 function registerEmbeddingLifecycles(strapi) {
-  // Register lifecycle hooks for content types that should have embeddings
-  const contentTypes = ['api::article.article', 'api::blog.blog'];
+  // Get configuration from plugin config
+  const config = strapi.config.get('plugin.semantic-search') || {};
   
-  contentTypes.forEach(contentType => {
+  // Default content types and field mappings
+  const defaultContentTypes = {
+    'api::article.article': ['title', 'content', 'summary'],
+    'api::blog.blog': ['title', 'body', 'excerpt']
+  };
+  
+  // Validate and use configured content types or defaults
+  const contentTypes = validateConfiguration(config.contentTypes || defaultContentTypes, strapi);
+  
+  // Store the configuration for use in other functions
+  strapi.plugin('semantic-search').config = { contentTypes };
+  
+  Object.keys(contentTypes).forEach(contentType => {
     // Use Strapi 5 lifecycle hooks
     strapi.db.lifecycles.subscribe({
       models: [contentType],
@@ -39,7 +51,7 @@ function registerEmbeddingLifecycles(strapi) {
       }
     });
     
-    strapi.log.info(`Registered embedding lifecycle hooks for ${contentType}`);
+    strapi.log.info(`Registered embedding lifecycle hooks for ${contentType} with fields: ${contentTypes[contentType].join(', ')}`);
   });
 }
 
@@ -59,7 +71,7 @@ async function processDocumentEmbedding(event, action, strapi) {
     const embeddingService = strapi.plugin('semantic-search').service('embeddingService');
 
     // Extract text content from the document
-    const textContent = extractTextContent(data);
+    const textContent = extractTextContent(data, modelName, strapi);
     
     if (!textContent || textContent.trim().length < 10) {
       strapi.log.debug(`Skipping embedding generation for ${modelName} - insufficient text content`);
@@ -90,11 +102,15 @@ async function processDocumentEmbedding(event, action, strapi) {
   }
 }
 
-function extractTextContent(data) {
+function extractTextContent(data, modelName, strapi) {
   let textContent = '';
   
-  // Common text fields to extract from
-  const textFields = ['title', 'name', 'content', 'body', 'summary', 'description', 'excerpt'];
+  // Get configured field mappings for this content type
+  const config = strapi.plugin('semantic-search').config || {};
+  const contentTypes = config.contentTypes || {};
+  
+  // Get fields for this specific content type, or use defaults
+  const textFields = contentTypes[modelName] || ['title', 'name', 'content', 'body', 'summary', 'description', 'excerpt'];
   
   textFields.forEach(field => {
     if (data[field]) {
@@ -103,9 +119,55 @@ function extractTextContent(data) {
       } else if (Array.isArray(data[field])) {
         // Handle rich text blocks or arrays
         textContent += JSON.stringify(data[field]) + ' ';
+      } else if (typeof data[field] === 'object') {
+        // Handle nested objects (like rich text)
+        textContent += JSON.stringify(data[field]) + ' ';
       }
     }
   });
 
   return textContent.trim();
+}
+
+function validateConfiguration(contentTypes, strapi) {
+  if (!contentTypes || typeof contentTypes !== 'object') {
+    strapi.log.warn('Semantic Search: Invalid contentTypes configuration, using defaults');
+    return {
+      'api::article.article': ['title', 'content', 'summary'],
+      'api::blog.blog': ['title', 'body', 'excerpt']
+    };
+  }
+
+  const validatedConfig = {};
+  
+  Object.keys(contentTypes).forEach(contentType => {
+    // Validate content type format
+    if (!contentType.startsWith('api::') || !contentType.includes('.')) {
+      strapi.log.warn(`Semantic Search: Invalid content type format: ${contentType}. Should be like 'api::article.article'`);
+      return;
+    }
+
+    // Validate fields array
+    const fields = contentTypes[contentType];
+    if (!Array.isArray(fields) || fields.length === 0) {
+      strapi.log.warn(`Semantic Search: Invalid fields for ${contentType}. Should be an array of field names`);
+      return;
+    }
+
+    // Validate field names
+    const validFields = fields.filter(field => {
+      if (typeof field !== 'string' || field.trim() === '') {
+        strapi.log.warn(`Semantic Search: Invalid field name '${field}' for ${contentType}`);
+        return false;
+      }
+      return true;
+    });
+
+    if (validFields.length > 0) {
+      validatedConfig[contentType] = validFields;
+      strapi.log.info(`Semantic Search: Validated configuration for ${contentType}: ${validFields.join(', ')}`);
+    }
+  });
+
+  return validatedConfig;
 }
